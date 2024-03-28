@@ -1,13 +1,15 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { init, useConnectWallet } from '@web3-onboard/react'
 import injectedModule from '@web3-onboard/injected-wallets'
 import { ethers } from 'ethers'
+import { useState } from 'react'
+import Onboard from '@web3-onboard/core'
+import safeModule from '@web3-onboard/gnosis'
 
-// Sign up to get your free API key at https://explorer.blocknative.com/?signup=true
-// Required for Transaction Notifications and Transaction Preview
 const apiKey = '1730eff0-9d50-4382-a3fe-89f0d34a2070'
 
-const injected = injectedModule()
+const injected = injectedModule();
+const safe = safeModule();
 
 const infuraKey = 'e200479dc89a4072a05c7aa1c0f83147'
 const rpcUrl = `https://mainnet.infura.io/v3/${infuraKey}`
@@ -15,7 +17,7 @@ const rpcUrl = `https://mainnet.infura.io/v3/${infuraKey}`
 // initialize Onboard
 init({
   apiKey,
-  wallets: [injected],
+  wallets: [injected, safe],
   chains: [
     {
       id: '0x1',
@@ -46,22 +48,36 @@ init({
 
 function App() {
   const [{ wallet, connecting }, connect, disconnect] = useConnectWallet()
-  console.log("🚀 ~ App ~ wallet:", wallet)
+  const [account, setAccount] = useState(null)
+
+
+  useEffect(() => {
+    if (wallet?.provider) {
+      setAccount({
+        address: wallet.accounts[0].address,
+        balance: wallet.accounts[0].balance,
+      })
+    }
+  }, [wallet])
 
   // create an ethers provider
   let ethersProvider
 
   if (wallet) {
-    // if using ethers v6 this is:
-    // ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
     ethersProvider = new ethers.providers.Web3Provider(wallet.provider, 'any')
+    
   }
 
   return (
     <div>
-      <button disabled={connecting} onClick={() => (wallet ? disconnect(wallet) : connect())}>
-        {connecting ? 'connecting' : wallet ? 'disconnect' : 'connect'}
-      </button>
+          <div>{ account?.address }</div>
+          <div>Connected to {wallet?.label}</div>
+          <button disabled={connecting} onClick={() => (wallet ? disconnect(wallet) : connect())}>
+            {connecting ? 'connecting' : wallet ? 'disconnect' : 'connect'}
+          </button>
+          <button >
+            Get Safe WAllet
+          </button>
     </div>
   )
 }
